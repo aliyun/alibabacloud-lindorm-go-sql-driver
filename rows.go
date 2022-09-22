@@ -36,11 +36,12 @@ type resultSet struct {
 }
 
 type rows struct {
-	conn             *conn
-	statementID      uint32
-	resultSets       []*resultSet
-	currentResultSet int
-	columnNames      []string
+	conn                *conn
+	statementID         uint32
+	resultSets          []*resultSet
+	currentResultSet    int
+	columnNames         []string
+	closeStmtWhenClose  bool
 }
 
 // Columns returns the names of the columns. The number of
@@ -64,8 +65,28 @@ func (r *rows) Columns() []string {
 
 // Close closes the rows iterator.
 func (r *rows) Close() error {
-
+	if r.closeStmtWhenClose {
+		if err := r.closeStmt(); err != nil {
+			return err
+		}
+	}
 	r.conn = nil
+	return nil
+}
+
+func(r *rows) closeStmt() error {
+	if r.conn.connectionId == "" {
+		return driver.ErrBadConn
+	}
+
+	_, err := r.conn.httpClient.post(context.Background(), &message.CloseStatementRequest{
+		ConnectionId: r.conn.connectionId,
+		StatementId:  r.statementID,
+	})
+
+	if err != nil {
+		return r.conn.avaticaErrorToResponseErrorOrError(err)
+	}
 	return nil
 }
 
@@ -137,6 +158,13 @@ func (r *rows) Next(dest []driver.Value) error {
 
 	return nil
 }
+
+func newRowsWithCloseStmtWhenClose(conn *conn, statementID uint32, resultSets []*message.ResultSetResponse) *rows {
+	rows := newRows(conn, statementID, resultSets)
+	rows.closeStmtWhenClose = true
+	return rows
+}
+
 
 // newRows create a new set of rows from a result set.
 func newRows(conn *conn, statementID uint32, resultSets []*message.ResultSetResponse) *rows {

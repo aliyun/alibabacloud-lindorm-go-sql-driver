@@ -145,9 +145,11 @@ func (c *conn) exec(ctx context.Context, query string, args []namedValue) (drive
 		return nil, c.avaticaErrorToResponseErrorOrError(err)
 	}
 
+	stmtId := st.(*message.CreateStatementResponse).StatementId
+
 	res, err := c.httpClient.post(ctx, &message.PrepareAndExecuteRequest{
 		ConnectionId:      c.connectionId,
-		StatementId:       st.(*message.CreateStatementResponse).StatementId,
+		StatementId:       stmtId,
 		Sql:               query,
 		MaxRowsTotal:      c.config.maxRowsTotal,
 		FirstFrameMaxSize: c.config.frameMaxSize,
@@ -159,6 +161,18 @@ func (c *conn) exec(ctx context.Context, query string, args []namedValue) (drive
 
 	// Currently there is only 1 ResultSet per response for exec
 	changed := int64(res.(*message.ExecuteResponse).Results[0].UpdateCount)
+
+	// close statement
+	if c.connectionId == "" {
+		return nil, driver.ErrBadConn
+	}
+	_, err = c.httpClient.post(context.Background(), &message.CloseStatementRequest{
+		ConnectionId: c.connectionId,
+		StatementId:  stmtId,
+	})
+	if err != nil {
+		return nil, c.avaticaErrorToResponseErrorOrError(err)
+	}
 
 	return &result{
 		affectedRows: changed,
@@ -202,7 +216,7 @@ func (c *conn) query(ctx context.Context, query string, args []namedValue) (driv
 
 	resultSets := res.(*message.ExecuteResponse).Results
 
-	return newRows(c, st.(*message.CreateStatementResponse).StatementId, resultSets), nil
+	return newRowsWithCloseStmtWhenClose(c, st.(*message.CreateStatementResponse).StatementId, resultSets), nil
 }
 
 func (c *conn) avaticaErrorToResponseErrorOrError(err error) error {
