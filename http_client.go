@@ -52,43 +52,42 @@ func (e avaticaError) Error() string {
 }
 
 // NewHTTPClient creates a new httpClient from a host.
-func NewHTTPClient(host string, baseClient *http.Client, config *Config) (*httpClient, error) {
+func NewHTTPClient(host string, config *Config) (*httpClient, error) {
 
-	if baseClient == nil {
-		baseClient = &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
-					DualStack: true,
-				}).DialContext,
-				MaxIdleConns:          100,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
-			},
+	client := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			MaxConnsPerHost:       1,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
+		},
+	}
+	switch config.authentication {
+	case digest:
+		client = WithDigestAuth(client, config.avaticaUser, config.avaticaPassword)
+	case basic:
+		client = WithBasicAuth(client, config.avaticaUser, config.avaticaPassword)
+	case spnego:
+		user := config.principal.username
+		realm := config.principal.realm
+		cli, err := WithKerberosAuth(client, user, realm, config.keytab, config.krb5Conf, config.krb5CredentialCache)
+		if err != nil {
+			return nil, fmt.Errorf("can't add kerberos authentication to http client: %w", err)
 		}
-		switch config.authentication {
-		case digest:
-			baseClient = WithDigestAuth(baseClient, config.avaticaUser, config.avaticaPassword)
-		case basic:
-			baseClient = WithBasicAuth(baseClient, config.avaticaUser, config.avaticaPassword)
-		case spnego:
-			user := config.principal.username
-			realm := config.principal.realm
-			cli, err := WithKerberosAuth(baseClient, user, realm, config.keytab, config.krb5Conf, config.krb5CredentialCache)
-			if err != nil {
-				return nil, fmt.Errorf("can't add kerberos authentication to http client: %w", err)
-			}
-			baseClient = cli
-		}
+		client = cli
 	}
 
 	c := &httpClient{
 		host:       host,
-		httpClient: baseClient,
+		httpClient: client,
 	}
 
 	return c, nil

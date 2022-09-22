@@ -72,7 +72,7 @@ func (c *Connector) Connect(context.Context) (driver.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error generating connection id: %w", err)
 	}
-	httpClient, err := NewHTTPClient(config.endpoint, c.Client, config)
+	httpClient, err := NewHTTPClient(config.endpoint, config)
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to create HTTP client: %w", err)
