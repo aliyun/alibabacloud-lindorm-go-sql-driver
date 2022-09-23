@@ -17,43 +17,46 @@ limitations under the License.
 {% endcomment %}
 -->
 
-# Apache Avatica/Phoenix SQL Driver
+# Alibaba Cloud Lindorm SQL Driver
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/apache/calcite-avatica-go/v5.svg)](https://pkg.go.dev/github.com/apache/calcite-avatica-go/v5)
-[![Build Status](https://github.com/apache/calcite-avatica-go/workflows/Tests/badge.svg)](https://github.com/apache/calcite-avatica-go)
 
-Apache Calcite's Avatica Go is a Go [database/sql](https://golang.org/pkg/database/sql/) driver for the Avatica server.
-
-Avatica is a sub-project of [Apache Calcite](https://calcite.apache.org).
+Alibaba Cloud Lindorm SQL Driver is a Go [database/sql](https://golang.org/pkg/database/sql/) driver forked from project [Apache Calcite's Avatica Go](https://github.com/apache/calcite-avatica-go).
+It was adapted for the Alibaba Cloud Lindorm([CN](https://www.aliyun.com/product/apsaradb/lindorm), [EN](https://www.alibabacloud.com/product/lindorm)).
 
 ## Quick Start
-Install using Go modules:
+Install using Go modules and Go 1.17+.
 
 ```
 $ go get github.com/apache/calcite-avatica-go
 ```
 
-The Phoenix/Avatica driver implements Go's `database/sql/driver` interface, so, import the
-`database/sql` package and the driver:
+Add the following dependency declaration to your `go.mod` file:
+
+```
+require github.com/apache/calcite-avatica-go/v5 v5.0.0
+
+replace github.com/apache/calcite-avatica-go/v5 => github.com/aliyun/alibabacloud-lindorm-go-sql-driver/v5 v5.0.1
+```
+
+The funcationality of Alibaba Cloud Lindorm SQL Driver keeps the same as Phoenix/Avatica driver, which implements Go's `database/sql/driver` interface, 
+so, import the `database/sql` package and the driver:
 
 ```
 import "database/sql"
 import _ "github.com/apache/calcite-avatica-go/v5"
 
-db, err := sql.Open("avatica", "http://localhost:8765")
+lindormUrl := "http://ld-xxxxx.lindorm.rds.aliyuncs.com:30060"
+conn := avatica.NewConnector(lindormUrl).(*avatica.Connector)
+conn.Info = map[string]string{
+    "user":     "usr",     // username
+    "password": "psw",     // password
+    "database": "db1",     // the database used by default
+}
+
+db := sql.OpenDB(conn)
 ```
 
-Then simply use the database connection to query some data, for example:
+You can refer to the following demo for more details about the usage of Alibaba Cloud Lindorm SQL Driver.
+* [Demo](https://github.com/aliyun/aliyun-apsaradb-hbase-demo/blob/master/lindormsql-go/demo/demo.go)
 
-```
-rows := db.Query("SELECT COUNT(*) FROM test")
-```
-
-For more details, see the [home page](https://calcite.apache.org/avatica/docs/go_client_reference.html).
-
-Release notes for all published versions are available on the [history
-page](https://calcite.apache.org/avatica/docs/go_history.html).
-
-## Issues
-We do not use Github to file issues. Please create an issue on [Calcite's JIRA](https://issues.apache.org/jira/projects/CALCITE/issues)
-and select `avatica-go` as the component.
