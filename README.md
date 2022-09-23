@@ -37,7 +37,7 @@ replace github.com/apache/calcite-avatica-go/v5 => github.com/aliyun/alibabaclou
 1. 在代码中添加数据库驱动的依赖
 ```go
 import (
-		avatica "github.com/apache/calcite-avatica-go/v5"
+	avatica "github.com/apache/calcite-avatica-go/v5"
 )
 ```
 
@@ -86,17 +86,17 @@ if err != nil {
 	return
 }
 defer rows.Close()
-	var id int
-	var name string
-	var age int
-	for rows.Next() {
-		err = rows.Scan(&id, &name, &age)
-		if err != nil {
-			fmt.Println("scan data error", err)
-			return
-		}
-		fmt.Println("id:", id, "name:", name, "age:", age)
+var id int
+var name string
+var age int
+for rows.Next() {
+	err = rows.Scan(&id, &name, &age)
+	if err != nil {
+		fmt.Println("scan data error", err)
+		return
 	}
+	fmt.Println("id:", id, "name:", name, "age:", age)
+}
 
 //删除数据
 _, err = db.Exec("delete from user_test where id=1")
@@ -134,17 +134,17 @@ if err != nil {
 	return
 }
 defer rows.Close()
-	var id int
-	var name string
-	var age int
-	for rows.Next() {
-		err = rows.Scan(&id, &name, &age)
-		if err != nil {
-			fmt.Println("scan data error", err)
-			return
-		}
-		fmt.Println("id:", id, "name:", name, "age:", age)
+var id int
+var name string
+var age int
+for rows.Next() {
+	err = rows.Scan(&id, &name, &age)
+	if err != nil {
+		fmt.Println("scan data error", err)
+		return
 	}
+	fmt.Println("id:", id, "name:", name, "age:", age)
+}
 ```
 说明：完整的使用示例，您可以参考[示例Demo](https://github.com/aliyun/aliyun-apsaradb-hbase-demo/blob/master/lindormsql-go/prepare_demo/prepare_demo.go)
 
