@@ -286,6 +286,24 @@ func TestValidTransactionIsolation(t *testing.T) {
 	}
 }
 
+func TestValidTimeout(t *testing.T) {
+
+	validTimeouts := []int{100, 500, 1000, 2000}
+
+	for _, timeout := range validTimeouts {
+
+		config, err := ParseDSN("http://localhost:8765?timeout=" + strconv.Itoa(timeout))
+
+		if err != nil {
+			t.Fatalf("Unexpected error when %d is set as the timeout: %s", timeout, err)
+		}
+
+		if config.timeout != int64(timeout) {
+			t.Fatalf("parse time out err, expect :%d, got: %d", timeout, config.timeout)
+		}
+	}
+}
+
 func TestInvalidAuthentication(t *testing.T) {
 
 	_, err := ParseDSN("http://localhost:8765?authentication=ASDF")

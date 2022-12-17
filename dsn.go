@@ -44,7 +44,7 @@ type Config struct {
 	schema               string
 	transactionIsolation uint32
 	batching             bool
-	timeout              int64
+	timeout              int64 // Millisecond
 
 	authentication      authentication
 	avaticaUser         string
