@@ -69,6 +69,7 @@ func NewHTTPClient(host string, config *Config) (*httpClient, error) {
 			ExpectContinueTimeout: 1 * time.Second,
 			MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
 		},
+		Timeout: time.Duration(config.timeout),
 	}
 	switch config.authentication {
 	case digest:
