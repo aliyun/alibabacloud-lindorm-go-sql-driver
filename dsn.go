@@ -44,6 +44,7 @@ type Config struct {
 	schema               string
 	transactionIsolation uint32
 	batching             bool
+	timeout              int64 // Millisecond
 
 	authentication      authentication
 	avaticaUser         string
@@ -130,6 +131,17 @@ func ParseDSN(dsn string) (*Config, error) {
 		if v == "true" {
 			conf.batching = true
 		}
+	}
+
+	if v := queries.Get("timeout"); v != "" {
+
+		timeout, err := strconv.Atoi(v)
+
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for timeout: %w", err)
+		}
+
+		conf.timeout = int64(timeout)
 	}
 
 	if v := queries.Get("authentication"); v != "" {
