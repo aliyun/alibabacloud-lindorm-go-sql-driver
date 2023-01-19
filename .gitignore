@@ -37,3 +37,4 @@ nb-configuration.xml
 */nb-configuration.xml
 
 # End .gitignore
+.DS_Store

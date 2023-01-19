@@ -159,8 +159,14 @@ func (c *conn) exec(ctx context.Context, query string, args []namedValue) (drive
 		return nil, c.avaticaErrorToResponseErrorOrError(err)
 	}
 
+	executeResponse := res.(*message.ExecuteResponse)
+
+	if executeResponse == nil || executeResponse.Results == nil || len(executeResponse.Results) == 0 {
+		return nil, c.avaticaErrorToResponseErrorOrError(errors.New("exec response empty"))
+	}
+
 	// Currently there is only 1 ResultSet per response for exec
-	changed := int64(res.(*message.ExecuteResponse).Results[0].UpdateCount)
+	changed := int64(executeResponse.Results[0].UpdateCount)
 
 	// close statement
 	if c.connectionId == "" {
