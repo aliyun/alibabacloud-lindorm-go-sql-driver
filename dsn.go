@@ -65,7 +65,7 @@ func ParseDSN(dsn string) (*Config, error) {
 
 	conf := &Config{
 		maxRowsTotal:         -1,
-		frameMaxSize:         -1,
+		frameMaxSize:         500,
 		location:             time.UTC,
 		transactionIsolation: 0,
 		batching:             false,
