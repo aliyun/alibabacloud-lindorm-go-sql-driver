@@ -254,12 +254,12 @@ func (c *conn) avaticaErrorToResponseErrorOrError(err error) error {
 // ResetSession implements driver.SessionResetter.
 // (From Go 1.10)
 func (c *conn) ResetSession(ctx context.Context) error {
-	if c.connectionId == "" {
-		return driver.ErrBadConn
-	}
-	err := registerConn(c)
-	if err != nil {
-		return err
-	}
+	//if c.connectionId == "" {
+	//	return driver.ErrBadConn
+	//}
+	//err := registerConn(c)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
