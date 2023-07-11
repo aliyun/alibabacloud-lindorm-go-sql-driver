@@ -127,6 +127,9 @@ func (s *stmt) exec(ctx context.Context, args []namedValue) (driver.Result, erro
 	}
 
 	executeResponse := res.(*message.ExecuteResponse)
+	if executeResponse == nil {
+		return nil, s.conn.avaticaErrorToResponseErrorOrError(errors.New("ExecuteRequest response empty"))
+	}
 
 	if executeResponse.MissingStatement {
 		return nil, driver.ErrBadConn
@@ -134,7 +137,7 @@ func (s *stmt) exec(ctx context.Context, args []namedValue) (driver.Result, erro
 
 	results := executeResponse.Results
 
-	if len(results) <= 0 {
+	if results == nil || len(results) == 0 {
 		return nil, errors.New("empty ResultSet in ExecuteResponse")
 	}
 
@@ -178,6 +181,10 @@ func (s *stmt) query(ctx context.Context, args []namedValue) (driver.Rows, error
 	}
 
 	executeResponse := res.(*message.ExecuteResponse)
+
+	if executeResponse == nil {
+		return nil, s.conn.avaticaErrorToResponseErrorOrError(errors.New("ExecuteRequest response empty"))
+	}
 
 	if executeResponse.MissingStatement {
 		return nil, driver.ErrBadConn

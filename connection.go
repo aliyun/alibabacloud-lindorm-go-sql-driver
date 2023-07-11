@@ -161,8 +161,16 @@ func (c *conn) exec(ctx context.Context, query string, args []namedValue) (drive
 
 	executeResponse := res.(*message.ExecuteResponse)
 
-	if executeResponse == nil || executeResponse.Results == nil || len(executeResponse.Results) == 0 {
-		return nil, c.avaticaErrorToResponseErrorOrError(errors.New("exec response empty"))
+	if executeResponse == nil {
+		return nil, c.avaticaErrorToResponseErrorOrError(errors.New("PrepareAndExecuteRequest response empty"))
+	}
+
+	if executeResponse.MissingStatement {
+		return nil, driver.ErrBadConn
+	}
+
+	if  executeResponse.Results == nil || len(executeResponse.Results) == 0 {
+		return nil, c.avaticaErrorToResponseErrorOrError(errors.New("PrepareAndExecuteRequest response empty"))
 	}
 
 	// Currently there is only 1 ResultSet per response for exec
@@ -220,7 +228,17 @@ func (c *conn) query(ctx context.Context, query string, args []namedValue) (driv
 		return nil, c.avaticaErrorToResponseErrorOrError(err)
 	}
 
-	resultSets := res.(*message.ExecuteResponse).Results
+	executeResponse := res.(*message.ExecuteResponse)
+
+	if executeResponse == nil {
+		return nil, c.avaticaErrorToResponseErrorOrError(errors.New("PrepareAndExecuteRequest response empty"))
+	}
+
+	if executeResponse.MissingStatement {
+		return nil, driver.ErrBadConn
+	}
+
+	resultSets := executeResponse.Results
 
 	return newRowsWithCloseStmtWhenClose(c, st.(*message.CreateStatementResponse).StatementId, resultSets), nil
 }
