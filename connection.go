@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"net/http"
 
 	avaticaErrors "github.com/apache/calcite-avatica-go/v5/errors"
 	"github.com/apache/calcite-avatica-go/v5/message"
@@ -84,6 +85,11 @@ func (c *conn) Close() error {
 	})
 
 	c.connectionId = ""
+
+	t , isOk := (c.httpClient.httpClient.Transport).(*http.Transport)
+	if isOk {
+		t.CloseIdleConnections()
+	}
 
 	if err != nil {
 		return c.avaticaErrorToResponseErrorOrError(err)
